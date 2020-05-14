@@ -42,13 +42,21 @@ $(document).ready(async function() {
         $('#z').text(sensor.z);
 
         filter.update(sensor); // Pass latest values through filter.
+        //gravity
         $('#x_filt').text(filter.x);
         $('#y_filt').text(filter.y);
         $('#z_filt').text(filter.z);
+        // Isolated linear acceleration
+        lin_acc_x = sensor.x-filter.x;
+        lin_acc_y = sensor.y-filter.y;
+        lin_acc_z = sensor.z-filter.z;
+        lin_acc_mod = Math.sqrt( Math.pow(lin_acc_x,2) + Math.pow(lin_acc_y,2) + Math.pow(lin_acc_z,2) )
+
+        $('#acc-mod').append($.parseHTML(`<div class="row"><div class="col">${lin_acc_mod}</div></div>`));
+        
         $('#x-f').text(sensor.x-filter.x);
         $('#y-f').text(sensor.y-filter.y);
         $('#z-f').text(sensor.z-filter.z);
-        //console.log(`Isolated gravity (${filter.x}, ${filter.y}, ${filter.z})`);
         
         //Create a message
         let msgText = JSON.stringify({clientId:clientUniqueId,x:sensor.x,y:sensor.y,z:sensor.z});
@@ -93,6 +101,7 @@ function onMessageArrived(message) {
   console.log("onMessageArrived:"+message.payloadString);
 }
 
+//called on initializaiton to get a unique id and retrive only classification associated to my id
 async function getUniqueId(){
 
   const msgUint8 = new TextEncoder().encode(new Date().toLocaleString()+Math.random().toString());                           // encode as (utf-8) Uint8Array
@@ -102,6 +111,7 @@ async function getUniqueId(){
 
 }
 
+//called when sensor.onreading
 class LowPassFilterData {
   constructor(reading, bias) {
     Object.assign(this, { x: reading.x, y: reading.y, z: reading.z });
