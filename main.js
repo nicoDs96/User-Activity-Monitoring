@@ -52,7 +52,7 @@ $(document).ready(async function() {
         lin_acc_z = sensor.z-filter.z;
         lin_acc_mod = Math.sqrt( Math.pow(lin_acc_x,2) + Math.pow(lin_acc_y,2) + Math.pow(lin_acc_z,2) )
 
-        $('#acc-mod').append($.parseHTML(`<div class="row"><div class="col">${lin_acc_mod}</div></div>`));
+        $('#acc-mod').append($.parseHTML(`<div class="row"><div class="col">${lin_acc_mod}</div></div><br>`));
         
         $('#x-f').text(sensor.x-filter.x);
         $('#y-f').text(sensor.y-filter.y);
