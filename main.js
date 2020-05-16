@@ -15,8 +15,8 @@ var linAccDataX = new Array(n).fill(0), linAccDataY = new Array(n).fill(0), linA
 
 $(document).ready(async function() {
   
-  /*
-  PLOT TEST CODE
+  
+  //PLOT TEST CODE
   initPlots();
   //simulate data to plot
   $('#stop').click( () =>{
@@ -40,10 +40,10 @@ $(document).ready(async function() {
     dataX.push(Math.random()); dataY.push(Math.random()); dataZ.push(Math.random());
     gravityDataX.push(Math.random()); gravityDataY.push(Math.random()); gravityDataZ.push(Math.random());
     linAccDataX.push(Math.random()); linAccDataY.push(Math.random()); linAccDataZ.push(Math.random());
-  },1);*/
+  },1);
   
   
-
+  /*
   try {
     // Create Sensor
     let sensor = new Accelerometer({frequency:1});
@@ -155,7 +155,7 @@ $(document).ready(async function() {
         setTimeout( ()=>{$().alert('close')}, 2000 );
         //Fallback, do something else etc.
     }
-
+    */
   
 });
 
