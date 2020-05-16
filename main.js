@@ -244,7 +244,7 @@ function initPlots(){
   */
   // set the dimensions and margins of the graph
   var svg = d3.select("#svg_x");
-  margin = {top: 10, right: 10, bottom: 10, left: 10};
+  margin = {top: 10, right: 10, bottom: 10, left: 40};
   width = +svg.attr("width") ;//- margin.left - margin.right;
   height = +svg.attr("height");// - margin.top - margin.bottom;
   g = svg.append("g").attr("transform", `translate( ${margin.left}, ${margin.top})`);
