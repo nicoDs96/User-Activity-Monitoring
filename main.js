@@ -63,27 +63,35 @@ $(document).ready(async function() {
       //init plot
       initPlots();
     });
-    $('#clean').click( () =>{$('#acc-mod').empty();
+    $('#clean').click( () =>{
+      
+      $('#acc-mod').empty();
       //remove plots
       d3.select("#svg_x > *").remove();
       d3.select("#svg_y > *").remove();
       d3.select("#svg_z > *").remove();
     });
     
-    // Paho configuration
-    let location = {hostname:"192.168.1.47", port:"16396", awsClientID: "client"};
-    client = new Paho.MQTT.Client(location.hostname, Number(location.port),"/wss", location.awsClientID);
+    try{
+      // Paho configuration
+      let location = {hostname:"192.168.1.47", port:"16396", awsClientID: "client"};
+      client = new Paho.MQTT.Client(location.hostname, Number(location.port),"/wss", location.awsClientID);
+      
+      // Init parameters
+      var clientUniqueId = await getUniqueId();
+      var activityTopic = `sensor/${clientUniqueId}/position`; 
+      var sensorPubTopic = `sensor/${clientUniqueId}/accelerometer`;
+
+      // set callback handlers
+      client.onConnectionLost = onConnectionLost;
+      client.onMessageArrived = onMessageArrived;
+      client.connect({onSuccess:onConnect});
+
+    }catch(error){
+      console.log('Error creating sensor:')
+      console.log(error);
+    }
     
-    // Init parameters
-    var clientUniqueId = await getUniqueId();
-    var activityTopic = `sensor/${clientUniqueId}/position`; 
-    var sensorPubTopic = `sensor/${clientUniqueId}/accelerometer`;
-
-    // set callback handlers
-    client.onConnectionLost = onConnectionLost;
-    client.onMessageArrived = onMessageArrived;
-    client.connect({onSuccess:onConnect});
-
 
     // TODO: 3. update view with classification info (onmessage callback)
     
