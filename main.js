@@ -5,7 +5,45 @@ let alert = '<div class="alert alert-warning" role="alert">'+
 var activityTopic = ""; //pattern sensor/{client id}/position
 var sensorPubTopic = ""; //pattern sensor/{client id}/accelerometer
 var clientUniqueId = "";
+
+//Plot Global var
+var x, y, line, line1, line2, n = 40; 
+var data = new Array(n).fill(0), dataX = new Array(n).fill(0),dataY = new Array(n).fill(0), dataZ = new Array(n).fill(0);
+var gravityDataX = new Array(n).fill(0), gravityDataY = new Array(n).fill(0), gravityDataZ = new Array(n).fill(0);
+var linAccDataX = new Array(n).fill(0), linAccDataY = new Array(n).fill(0), linAccDataZ = new Array(n).fill(0);
+
+
 $(document).ready(async function() {
+  
+  /*
+  PLOT TEST CODE
+  initPlots();
+  //simulate data to plot
+  $('#stop').click( () =>{
+    //remove plots
+    d3.select("#svg_x > * ").remove();
+    d3.select("#svg_y > * ").remove();
+    d3.select("#svg_z > * ").remove();
+  });
+  $('#start').click( () =>{
+    //init plot
+    initPlots();
+  });
+  $('#clean').click( () =>{$('#acc-mod').empty();
+    //remove plots
+    d3.select("#svg_x > *").remove();
+    d3.select("#svg_y > *").remove();
+    d3.select("#svg_z > *").remove();
+  });
+  setInterval(()=>{
+  
+    dataX.push(Math.random()); dataY.push(Math.random()); dataZ.push(Math.random());
+    gravityDataX.push(Math.random()); gravityDataY.push(Math.random()); gravityDataZ.push(Math.random());
+    linAccDataX.push(Math.random()); linAccDataY.push(Math.random()); linAccDataZ.push(Math.random());
+  },1);*/
+  
+  
+
   try {
     // Create Sensor
     let sensor = new Accelerometer({frequency:1});
@@ -13,11 +51,27 @@ $(document).ready(async function() {
     let filter = new LowPassFilterData(sensor, 0.3);
     
     // allow user to start stop monitoring
-    $('#stop').click( () =>{sensor.stop()} );
-    $('#start').click( () =>{sensor.start()} );
+    $('#stop').click( () =>{
+      sensor.stop();
+      //remove plots
+      d3.select("#svg_x > *").remove();
+      d3.select("#svg_y > *").remove();
+      d3.select("#svg_z > *").remove();
+    });
+    $('#start').click( () =>{
+      sensor.start()
+      //init plot
+      initPlots();
+    });
+    $('#clean').click( () =>{$('#acc-mod').empty();
+      //remove plots
+      d3.select("#svg_x > *").remove();
+      d3.select("#svg_y > *").remove();
+      d3.select("#svg_z > *").remove();
+    });
     
     // Paho configuration
-    let location = {hostname:"127.0.0.1", port:"16396", awsClientID: "client"};
+    let location = {hostname:"192.168.1.47", port:"16396", awsClientID: "client"};
     client = new Paho.MQTT.Client(location.hostname, Number(location.port),"/wss", location.awsClientID);
     
     // Init parameters
@@ -40,7 +94,7 @@ $(document).ready(async function() {
         $('#y').text(sensor.y);
         //console.log("Acceleration along Z-axis: " + sensor.z);
         $('#z').text(sensor.z);
-
+        
         filter.update(sensor); // Pass latest values through filter.
         //gravity
         $('#x_filt').text(filter.x);
@@ -54,18 +108,33 @@ $(document).ready(async function() {
 
         $('#acc-mod').append($.parseHTML(`<div class="row"><div class="col">${lin_acc_mod}</div></div><br>`));
         
-        $('#x-f').text(sensor.x-filter.x);
-        $('#y-f').text(sensor.y-filter.y);
-        $('#z-f').text(sensor.z-filter.z);
+        $('#x-f').text(lin_acc_x);
+        $('#y-f').text(lin_acc_y);
+        $('#z-f').text(lin_acc_z);
+
+        //UPDATE DATA TO PLOT
+        dataX.push(sensor.x); dataY.push(sensor.y); dataZ.push(sensor.z);
+        gravityDataX.push(filter.x); gravityDataY.push(filter.y); gravityDataZ.push(filter.z);
+        linAccDataX.push(lin_acc_x); linAccDataY.push(lin_acc_y); linAccDataZ.push(lin_acc_z);
         
+        msgText= {
+          clientId:clientUniqueId,
+          x:sensor.x,
+          y:sensor.y,
+          z:sensor.z,
+          lin_acc_x:lin_acc_x,
+          lin_acc_y:lin_acc_y,
+          lin_acc_z:lin_acc_z,
+          acc_mod:lin_acc_mod
+        }
         //Create a message
-        let msgText = JSON.stringify({clientId:clientUniqueId,x:sensor.x,y:sensor.y,z:sensor.z});
+        let msgText = JSON.stringify(msgText);
         message = new Paho.MQTT.Message( msgText );
         message.destinationName = sensorPubTopic;
         //Send it with paho
         //client.send(message);
         
-        //TODO: 4. display data graphically
+        
 
       
     }
@@ -126,4 +195,237 @@ class LowPassFilterData {
 };
 
 
-              
+function tick() { //animate the plots
+
+    // Redraw the line.
+    d3.select(this)
+      .attr("d", line)
+      .attr("transform", null);
+
+    // Slide it to the left.
+    d3.active(this)
+      .attr("transform", `translate( ${x(-1)},0)`)
+    .transition()
+      .on("start", tick);
+
+    // Pop the old data point off the front.
+    dataX.shift();
+    dataY.shift();
+    dataZ.shift();
+    gravityDataX.shift();
+    gravityDataY.shift();
+    gravityDataZ.shift();
+    linAccDataX.shift();
+    linAccDataY.shift();
+    linAccDataZ.shift();
+
+
+
+
+  }
+
+
+function initPlots(){
+  update_rate = 1000; //ms
+  /* 
+  ==========================================
+  ||                                      ||
+  ||            SETUP RAW PLOT            ||
+  ||                                      ||
+  ==========================================
+  */
+  // set the dimensions and margins of the graph
+  var svg = d3.select("#svg_x");
+  margin = {top: 10, right: 10, bottom: 10, left: 10};
+  width = +svg.attr("width") ;//- margin.left - margin.right;
+  height = +svg.attr("height");// - margin.top - margin.bottom;
+  g = svg.append("g").attr("transform", `translate( ${margin.left}, ${margin.top})`);
+
+  // set the ranges
+  x = d3.scaleLinear()
+    .domain([0, n - 1])
+    .range([0, width]);
+
+  y = d3.scaleLinear()
+    .domain([-3, 3])
+    .range([height, 0]);
+
+  // define the 1st line
+  line = d3.line()
+    .x((d, i) => { return x(i); })
+    .y((d, i) => { return y(d); });
+
+  g.append("defs").append("clipPath")
+    .attr("id", "clip")
+    .append("rect")
+    .attr("width", width)
+    .attr("height", height);
+
+  //Add x axis
+  g.append("g")
+    .attr("class", "axis axis--x")
+    .attr("transform", "translate(0," + y(0) + ")")
+    .call(d3.axisBottom(x));
+  
+  //Add y axis
+  g.append("g")
+    .attr("class", "axis axis--y")
+    .call(d3.axisLeft(y));
+
+  g.append("g")
+    .attr("clip-path", "url(#clip)")
+    .append("path")
+    .datum(dataX)
+    .attr("class", "line")
+    .style("stroke", "violet")
+    .transition()
+    .duration(update_rate)
+    .ease(d3.easeLinear)
+    .on("start", tick);
+    
+
+  g.append("g")
+    .attr("clip-path", "url(#clip)")
+    .append("path")
+    .datum(dataY)
+    .attr("class", "line")
+    .style("stroke", "green")
+    .transition()
+    .duration(update_rate)
+    .ease(d3.easeLinear)
+    .on("start", tick );
+
+  g.append("g")
+    .attr("clip-path", "url(#clip)")
+    .append("path")
+    .datum(dataZ)
+    .attr("class", "line")
+    .style("stroke", "orange")
+    .transition()
+    .duration(update_rate)
+    .ease(d3.easeLinear)
+    .on("start", tick);
+    
+  
+  /* 
+  ==========================================
+  ||                                      ||
+  ||          SETUP GRAVITY PLOT          ||
+  ||                                      ||
+  ==========================================
+  */
+  var svg = d3.select("#svg_y");
+  g = svg.append("g").attr("transform", `translate( ${margin.left}, ${margin.top})`);
+  g.append("defs").append("clipPath")
+    .attr("id", "clip")
+    .append("rect")
+    .attr("width", width)
+    .attr("height", height);
+
+  //Add x axis
+  g.append("g")
+    .attr("class", "axis axis--x")
+    .attr("transform", "translate(0," + y(0) + ")")
+    .call(d3.axisBottom(x));
+  
+  //Add y axis
+  g.append("g")
+    .attr("class", "axis axis--y")
+    .call(d3.axisLeft(y));
+
+  g.append("g")
+    .attr("clip-path", "url(#clip)")
+    .append("path")
+    .datum(gravityDataX)
+    .attr("class", "line")
+    .style("stroke", "violet")
+    .transition()
+    .duration(update_rate)
+    .ease(d3.easeLinear)
+    .on("start", tick);
+    
+
+  g.append("g")
+    .attr("clip-path", "url(#clip)")
+    .append("path")
+    .datum(gravityDataY)
+    .attr("class", "line")
+    .style("stroke", "green")
+    .transition()
+    .duration(update_rate)
+    .ease(d3.easeLinear)
+    .on("start", tick);
+
+  g.append("g")
+    .attr("clip-path", "url(#clip)")
+    .append("path")
+    .datum(gravityDataZ)
+    .attr("class", "line")
+    .style("stroke", "orange")
+    .transition()
+    .duration(update_rate)
+    .ease(d3.easeLinear)
+    .on("start", tick);
+  
+    /* 
+  ==========================================
+  ||                                      ||
+  ||          SETUP LIN ACC PLOT          ||
+  ||                                      ||
+  ==========================================
+  */
+ var svg = d3.select("#svg_z");
+ g = svg.append("g").attr("transform", `translate( ${margin.left}, ${margin.top})`);
+ g.append("defs").append("clipPath")
+   .attr("id", "clip")
+   .append("rect")
+   .attr("width", width)
+   .attr("height", height);
+
+ //Add x axis
+ g.append("g")
+   .attr("class", "axis axis--x")
+   .attr("transform", "translate(0," + y(0) + ")")
+   .call(d3.axisBottom(x));
+ 
+ //Add y axis
+ g.append("g")
+   .attr("class", "axis axis--y")
+   .call(d3.axisLeft(y));
+
+ g.append("g")
+   .attr("clip-path", "url(#clip)")
+   .append("path")
+   .datum(linAccDataX)
+   .attr("class", "line")
+   .style("stroke", "violet")
+   .transition()
+   .duration(update_rate)
+   .ease(d3.easeLinear)
+   .on("start", tick);
+   
+
+ g.append("g")
+   .attr("clip-path", "url(#clip)")
+   .append("path")
+   .datum(linAccDataY)
+   .attr("class", "line")
+   .style("stroke", "green")
+   .transition()
+   .duration(update_rate)
+   .ease(d3.easeLinear)
+   .on("start", tick);
+
+ g.append("g")
+   .attr("clip-path", "url(#clip)")
+   .append("path")
+   .datum(linAccDataZ)
+   .attr("class", "line")
+   .style("stroke", "orange")
+   .transition()
+   .duration(update_rate)
+   .ease(d3.easeLinear)
+   .on("start", tick);
+   
+}
+
