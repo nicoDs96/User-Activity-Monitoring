@@ -114,8 +114,8 @@ $(document).ready(async function() {
         lin_acc_z = sensor.z-filter.z;
         lin_acc_mod = Math.sqrt( Math.pow(lin_acc_x,2) + Math.pow(lin_acc_y,2) + Math.pow(lin_acc_z,2) )
 
-        $('#acc-mod').append($.parseHTML(`<div class="row"><div class="col">${lin_acc_mod}</div></div><br>`));
-        
+        $('#acc-mod').text(`Linear Acceleration Module: ${lin_acc_mod}`);
+
         $('#x-f').text(lin_acc_x);
         $('#y-f').text(lin_acc_y);
         $('#z-f').text(lin_acc_z);
