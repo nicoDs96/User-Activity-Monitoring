@@ -212,7 +212,7 @@ function tick() { //animate the plots
 
     // Slide it to the left.
     d3.active(this)
-      .attr("transform", `translate( ${x(-1)},0)`)
+      .attr("transform", `translate( ${x(-0.1)},0)`)
     .transition()
       .on("start", tick);
 
@@ -255,7 +255,7 @@ function initPlots(){
     .range([0, width]);
 
   y = d3.scaleLinear()
-    .domain([-3, 3])
+    .domain([-10, 10])
     .range([height, 0]);
 
   // define the 1st line
