@@ -32,7 +32,7 @@ $(document).ready(async function() {
 
       // set callback handlers
       client.onConnectionLost = onConnectionLost;
-      client.onMessageArrived = onMessageArrived;\
+      client.onMessageArrived = onMessageArrived;
       var con_options={
         useSSL: true,
         userName : "prova",
