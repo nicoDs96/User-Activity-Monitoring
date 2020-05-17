@@ -12,13 +12,41 @@ $(document).ready(async function() {
   try {
     // Create Sensor
     let sensor = new Accelerometer({frequency:1});
-    sensor.onerror = event => console.log(event.error.name, event.error.message);
+    sensor.onerror = event => {
+      // Handle runtime errors.
+      if (event.error.name === 'NotAllowedError') {
+          // Branch to code for requesting permission.
+          navigator.permissions.query({ name: 'accelerometer' }).then(result => {
+            if (result.state === 'denied') {
+              console.log('Permission to use accelerometer sensor is denied.');
+              return;
+            }
+            // Use the sensor.
+          });
+      } else if (event.error.name === 'NotReadableError' ) {
+          console.log('Cannot connect to the sensor.');
+      };
+
+
     let filter = new LowPassFilterData(sensor, 0.3);
     
     // allow user to start stop monitoring
     $('#stop').click( () =>{sensor.stop();});
     $('#start').click( () =>{sensor.start()});
-    $('#clean').click( () =>{$('#acc-mod').empty();});
+    $('#clean').click( () =>{
+      $('#acc-mod').empty();
+      $('#x').empty();
+      $('#y').empty();
+      $('#z').empty();
+      //gravity
+      $('#x_filt').empty();
+      $('#y_filt').empty();
+      $('#z_filt').empty();
+      // Isolated linear acceleration
+      $('#x-f').empty();
+      $('#y-f').empty();
+      $('#z-f').empty();
+    });
     
     try{ // Paho configuration
       
