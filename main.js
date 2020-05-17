@@ -32,8 +32,15 @@ $(document).ready(async function() {
 
       // set callback handlers
       client.onConnectionLost = onConnectionLost;
-      client.onMessageArrived = onMessageArrived;
-      client.connect({onSuccess:onConnect});
+      client.onMessageArrived = onMessageArrived;\
+      var con_options={
+        useSSL: true,
+        userName : "prova",
+        password : "prova",
+        onSuccess: onConnect,
+        
+      }
+      client.connect(con_options);
 
     }catch(error){
       console.log('Error initializing paho:')
