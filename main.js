@@ -11,7 +11,7 @@ $(document).ready(async function() {
   
   try {
     // Create Sensor
-    let sensor = new Accelerometer({frequency:1});
+    let sensor = new Accelerometer({referenceFrame: 'device',frequency:1});
     sensor.onerror = event => {
       // Handle runtime errors.
       if (event.error.name === 'NotAllowedError') {
