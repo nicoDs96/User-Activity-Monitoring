@@ -11,24 +11,8 @@ $(document).ready(async function() {
   
   try {
     // Create Sensor
-    let sensor = new Accelerometer({referenceFrame: 'device',frequency:1});
-    sensor.onerror = event => {
-      // Handle runtime errors.
-      if (event.error.name === 'NotAllowedError') {
-          // Branch to code for requesting permission.
-          navigator.permissions.query({ name: 'accelerometer' }).then(result => {
-            if (result.state === 'denied') {
-              console.log('Permission to use accelerometer sensor is denied.');
-              return;
-            }
-            // Use the sensor.
-          });
-      } else if (event.error.name === 'NotReadableError' ) {
-          console.log('Cannot connect to the sensor.');
-      }
-    };
-
-
+    let sensor = new Accelerometer({frequency:1});
+    sensor.onerror = event => console.log(event.error.name, event.error.message);
     let filter = new LowPassFilterData(sensor, 0.3);
     
     // allow user to start stop monitoring
@@ -131,10 +115,9 @@ $(document).ready(async function() {
       
     }//onreading end
 
-  }catch(error) {
-      console.log('Error creating sensor:');
-      console.log(error.message);
-      console.log('name: '+error.name);
+  } catch(error) {
+      console.log('Error creating sensor:')
+      console.log(error);
       $('body').append($.parseHTML(alert));
   }
     
