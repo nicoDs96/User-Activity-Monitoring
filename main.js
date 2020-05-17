@@ -133,7 +133,8 @@ $(document).ready(async function() {
 
   }catch(error) {
       console.log('Error creating sensor:');
-      console.log(error);
+      console.log(error.message);
+      console.log('name: '+error.name);
       $('body').append($.parseHTML(alert));
   }
     
