@@ -25,7 +25,8 @@ $(document).ready(async function() {
           });
       } else if (event.error.name === 'NotReadableError' ) {
           console.log('Cannot connect to the sensor.');
-      };
+      }
+    };
 
 
     let filter = new LowPassFilterData(sensor, 0.3);
@@ -130,8 +131,8 @@ $(document).ready(async function() {
       
     }//onreading end
 
-  } catch(error) {
-      console.log('Error creating sensor:')
+  }catch(error) {
+      console.log('Error creating sensor:');
       console.log(error);
       $('body').append($.parseHTML(alert));
   }
