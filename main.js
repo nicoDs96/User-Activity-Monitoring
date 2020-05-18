@@ -41,6 +41,7 @@ $(document).ready(async function() {
   $('#start').prop("disabled",true);
   $('#clean').prop("disabled",true);
 
+  
   //set the listener on EDGE choice from the user
   $('#edge-flag').click( ()=>{
     if($('#edge-flag').is(":checked") ){
@@ -145,10 +146,15 @@ $(document).ready(async function() {
         APICall(url = `https://${myIpAddr}/readings`, method=1 ,data=msgText) // 1: POST, 0: GET
         .then((r)=> { console.log(r);}) // r={}
         .catch(function(e) {console.log(`error ${e}`);});
+
+        updateHistory(msgText, $('#activity').value());
       
       }else{
-        //local classification and publish the activity directly
+        //local classification, update history table and publish the activity directly
         activityEdge = classify(msgText);
+        
+        updateHistory(msgText,activityEdge);
+
         APICall(url = `https://${myIpAddr}/state/${clientUniqueId}`, method=1 ,data={activity:activityEdge}) // 1: POST, 0: GET
         .then((r)=> { console.log(r);}) // r={}
         .catch(function(e) {console.log(`error ${e}`);});
@@ -265,4 +271,18 @@ function checkTunnel(){
     $('#title-cont').append($.parseHTML(alertTunnelError));
   });
 
+}
+
+
+function updateHistory(data, activity){
+  let tableRow = `<tr>
+  <td>${activity}</td>
+  <td>${data.lin_acc_x.toFixed(3)}</td>
+  <td>${data.lin_acc_y.toFixed(3)}</td>
+  <td>${data.lin_acc_z.toFixed(3)}</td>
+  <td>${data.x.toFixed(3)}</td>
+  <td>${data.y.toFixed(3)}</td>
+  <td>${data.z.toFixed(3)}</td>
+  </tr>`;
+  $('#tableBody').append($.parseHTML(tableRow));
 }
