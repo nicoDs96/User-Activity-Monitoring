@@ -8,7 +8,7 @@ var clientUniqueId = "";
 
 var statusintervalId;
 
-var myIpAddr = '192.168.1.63';
+var myIpAddr = '21a18245.ngrok.io';//https://
 
 //called when sensor.onreading
 class LowPassFilterData {
@@ -94,7 +94,7 @@ $(document).ready(async function() {
         lin_acc_z:lin_acc_z,
         acc_mod:lin_acc_mod
       }
-      APICall(url = `https://${myIpAddr}:3000/state/client`, method=1 ,data=msgText) // 1: POST, 0: GET
+      APICall(url = `https://${myIpAddr}/state/client`, method=1 ,data=msgText) // 1: POST, 0: GET
       .then((r)=> { console.log(r);}) // r={}
       .catch(function(e) {console.log(`error ${e}`);});
       
@@ -159,7 +159,7 @@ async function APICall(url = '', method=0 ,data = {}) {
 var checkStatus = () => {
 
   statusintervalId = setInterval(()=>{
-    APICall(url = `https://${myIpAddr}:3000/state/${clientUniqueId}`, method=0 ,data={}) // 1: POST, 0: GET
+    APICall(url = `https://${myIpAddr}/state/${clientUniqueId}`, method=0 ,data={}) // 1: POST, 0: GET
     .then((response)=> { 
 
       try{ //update the status iff it is available online
