@@ -90,9 +90,9 @@ $(document).ready(async function() {
         lin_acc_z:lin_acc_z,
         acc_mod:lin_acc_mod
       }
-      APICall(url = 'http://127.0.0.1:3000/readings', method='POST' ,data=msgText)
-      .then(()=> { console.log("ok");})
-      .catch(function() {console.log("error");});
+      APICall(url = 'http://127.0.0.1:3000/state/client', method=1 ,data=msgText) // 1: POST, 0: GET
+      .then((r)=> { console.log(r);}) // r={}
+      .catch(function(e) {console.log(`error ${e}`);});
       
       //POST THE MESSAGE TO THE API
     }//onreading end
@@ -116,10 +116,11 @@ async function getUniqueId(){
 
 }
 
-async function APICall(url = '', method='' ,data = {}) {
-  if(method == "POST"){
+async function APICall(url = '', method=0 ,data = {}) {
+  var response;
+    if(method == 1){
     // Default options are marked with *
-    const response = await fetch(url, {
+     response = await fetch(url, {
       method: 'POST', 
       mode: 'cors', 
       cache: 'no-cache', 
@@ -132,9 +133,9 @@ async function APICall(url = '', method='' ,data = {}) {
       body: JSON.stringify(data) // body data type must match "Content-Type" header
     });
   }
-  if(method == "GET"){
+  if(method == 0){
     // Default options are marked with *
-    const response = await fetch(url, {
+     response = await fetch(url, {
       method: 'GET', 
       mode: 'cors', 
       cache: 'no-cache', 
@@ -150,5 +151,20 @@ async function APICall(url = '', method='' ,data = {}) {
   return response.json(); // parses JSON response into native JavaScript objects
 }
 
+//check for updates every 1 second
+var checkStatus = () => {
+  setInterval(()=>{
+    APICall(url = `http://127.0.0.1:3000/state/`, method=0 ,data={}) // 1: POST, 0: GET
+    .then((response)=> { 
 
-
+      if (!response.ok) {
+        console.log(response)
+      } else {
+        $('#activity').text(response.activity.toString());  
+      }
+      
+    }) // r={}
+    .catch(function(e) {console.log(`error ${e}`);});    
+    
+  },1000);
+}

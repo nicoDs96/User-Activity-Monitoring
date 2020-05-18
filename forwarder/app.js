@@ -61,7 +61,7 @@ app.post('/readings', function (req, res) {
         
         res.type('application/json');
         res.status(200);
-        res.send();
+        res.send({});
     }
     catch (e) {
         console.error("Error : " + e);

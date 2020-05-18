@@ -18,7 +18,7 @@ def process_data(client, userdata, message):
     print("Received message from: %s\nSending response to: %s"%(str(message.topic),classification_topic ))
 
     response = {}
-    if(float(data['acc_mod'])>0.6):
+    if(float(data['acc_mod'])>=0.6):
        response['activity'] = "moving"
     else:
         response['activity'] = "laying"
