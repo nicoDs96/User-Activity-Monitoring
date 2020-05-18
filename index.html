@@ -21,9 +21,26 @@
 <body>
  <!-- <script src="js/scripts.js"></script>-->
 
- 
- <h3>User Activity recognition</h3>
- <div class="container" id="accel">
+ <!-- As a heading -->
+<nav class="navbar navbar-light bg-light">
+  <span class="navbar-brand mb-0 h1">User Activity Recognition</span>
+</nav>
+<div id="title-cont"></div>
+<div class="container" >
+
+  <div class="row ">
+    <label for="basic-url">Insert a valid Tunnel Url to start monitoring</label>
+    <div class="input-group mb-3">
+      <input type="text" class="form-control" id="basic-url" aria-describedby="basic-addon3" placeholder=" https://21a18245.ngrok.io ">
+      <button type="button" class="btn btn-outline-dark" id="setTunnel">Set Tunnel</button>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="checkbox">
+      <label><input type="checkbox" id="edge-flag" value=""> Edge Recognition (Check to perform User Activity recognition locally)</label>
+    </div>
+  </div>
 
   <div class="row ">
     <button type="button" class="btn btn-outline-success" id="start">Start</button>
@@ -31,8 +48,8 @@
     <button type="button" class="btn btn-outline-secondary" id="clean">Clean</button>
   </div>
 
-  <div class="row"><h4>User Activity:</h4></div>
-  <div class="row" id="activity">Waiting</div>
+  <div class="row"><span class="font-weight-bold">Activity:&nbsp;</span> <span id="activity">Waiting</span></div>
+ 
   
   <div class="row"></div>
   

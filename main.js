@@ -2,15 +2,21 @@ let alert = '<div class="alert alert-warning" role="alert">'+
   'Seems like if your device/browser do not support accelerometer. Try to change device/browser.'+
   '</div>';
 
+  let alertTunnelError = '<div class="alert alert-danger" role="alert">'+
+  'The inserted url is not working, check if it is correct or if the api is down.'+
+  '</div>';
+
 var activityTopic = ""; //pattern sensor/{client id}/activity
 var sensorPubTopic = ""; //pattern sensor/{client id}/accelerometer
 var clientUniqueId = "";
 
 var statusintervalId;
 
+var EDGE = false;
+
 var myIpAddr = '21a18245.ngrok.io';//https://
 
-//called when sensor.onreading
+//called when sensor.onreading to isolate gravity and acceleration
 class LowPassFilterData {
   constructor(reading, bias) {
     Object.assign(this, { x: reading.x, y: reading.y, z: reading.z });
@@ -26,18 +32,54 @@ class LowPassFilterData {
 
 
 $(document).ready(async function() {
-  clientUniqueId = await getUniqueId()
+  //get a unique id
+  clientUniqueId = await getUniqueId();
+
+  // disable start stop clear and allow to click on them iff tunnelURL is valid
+  $('#setTunnel').click( checkTunnel );
+  $('#stop').prop("disabled",true);
+  $('#start').prop("disabled",true);
+  $('#clean').prop("disabled",true);
+
+  //set the listener on EDGE choice from the user
+  $('#edge-flag').click( ()=>{
+    if($('#edge-flag').is(":checked") ){
+      console.log("setting Edge to true");
+      EDGE=true;
+    }
+    else{
+      console.log("setting Edge to false");
+      EDGE=false;
+    } 
+  });
+
+  //CONFIGURE SENSOR AND MESSAGING
   try {
-    // Create Sensor
+    // Create Sensor and filter
     let sensor = new Accelerometer({frequency:1});
     sensor.onerror = event => console.log(event.error.name, event.error.message);
     let filter = new LowPassFilterData(sensor, 0.3);
     
     // allow user to start and stop monitoring, clear the interface
-    $('#stop').click( () =>{ sensor.stop(); clearInterval(statusintervalId) });
-    $('#start').click( () =>{ sensor.start(); checkStatus(); }); 
-    $('#clean').click( () =>{
-      $('#acc-mod').empty();
+    $('#stop').click( () =>{ 
+      sensor.stop(); //stop reading sensor
+      clearInterval(statusintervalId); //stop fetching user status from api
+    });
+    
+    $('#start').click( () =>{ 
+      sensor.start(); //start reading sensor
+      
+      if(!EDGE){
+        //start a synchronous routine that periodically (1s) check the user status from the api
+        // if we are not running in edge mode. Otherwise the local classifier will handle it 
+        // (see sensor.onreding) for details
+        checkStatus(); 
+      }
+      
+    });  
+    
+    $('#clean').click( () =>{ //clear all the fields
+      $('#acc-mod').empty(); 
       $('#x').empty();
       $('#y').empty();
       $('#z').empty();
@@ -81,30 +123,39 @@ $(document).ready(async function() {
       $('#z-f').text(lin_acc_z);
 
       /* 
-        SEND THE DATA
+        SEND THE DATA 
       */
-     //create a message
-      msgText= {
-        clientId:clientUniqueId,
-        x:sensor.x,
-        y:sensor.y,
-        z:sensor.z,
-        lin_acc_x:lin_acc_x,
-        lin_acc_y:lin_acc_y,
-        lin_acc_z:lin_acc_z,
-        acc_mod:lin_acc_mod
-      }
-      APICall(url = `https://${myIpAddr}/readings`, method=1 ,data=msgText) // 1: POST, 0: GET
-      .then((r)=> { console.log(r);}) // r={}
-      .catch(function(e) {console.log(`error ${e}`);});
+      if(!EDGE){
+        //create a message
+        msgText= {
+          clientId:clientUniqueId,
+          x:sensor.x,
+          y:sensor.y,
+          z:sensor.z,
+          lin_acc_x:lin_acc_x,
+          lin_acc_y:lin_acc_y,
+          lin_acc_z:lin_acc_z,
+          acc_mod:lin_acc_mod
+        }
+        //POST THE MESSAGE TO THE API
+        APICall(url = `https://${myIpAddr}/readings`, method=1 ,data=msgText) // 1: POST, 0: GET
+        .then((r)=> { console.log(r);}) // r={}
+        .catch(function(e) {console.log(`error ${e}`);});
       
-      //POST THE MESSAGE TO THE API
+      }else{
+        //local classification and publish the activity directly
+        activityEdge = classify(data);
+        APICall(url = `https://${myIpAddr}/state/${clientUniqueId}`, method=1 ,data={activity:activityEdge}) // 1: POST, 0: GET
+        .then((r)=> { console.log(r);}) // r={}
+        .catch(function(e) {console.log(`error ${e}`);});
+      }
+     
     }//onreading end
 
   } catch(error) {
       console.log('Error creating sensor:')
       console.log(error);
-      $('body').append($.parseHTML(alert));
+      $('#title-cont').append($.parseHTML(alert));
   }
     
 
@@ -120,6 +171,14 @@ async function getUniqueId(){
 
 }
 
+function classify(data){
+  if(data.lin_acc_mod >= 0.6){
+    $('#activity').text("moving");  
+  }else{
+    $('#activity').text("laying");  
+  }
+}
+
 async function APICall(url = '', method=0 ,data = {}) {
   var response;
     if(method == 1){
@@ -130,7 +189,8 @@ async function APICall(url = '', method=0 ,data = {}) {
       cache: 'no-cache', 
       credentials: 'same-origin', 
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin':'*'
         },
       redirect: 'follow',
       referrerPolicy: 'no-referrer', 
@@ -145,7 +205,8 @@ async function APICall(url = '', method=0 ,data = {}) {
       cache: 'no-cache', 
       credentials: 'same-origin', 
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin':'*'
         },
       redirect: 'follow',
       referrerPolicy: 'no-referrer', 
@@ -172,4 +233,30 @@ var checkStatus = () => {
     .catch(function(e) {console.log(`error ${e}`);});    
     
   },1000);
+}
+
+function checkTunnel(){
+   
+  $('#title-cont').empty();
+
+  let url = new URL($('#basic-url').val());
+  console.log(`Hostname: ${url.hostname}`);
+  myIpAddr = url.hostname;
+  APICall(url = `https://${myIpAddr}/test`,method=0 ,data={}).then( (r) =>{
+    if(r.Hello == 'World'){
+      //set buttons cliccable
+      console.log("working");
+      $('#stop').prop("disabled",false);
+      $('#start').prop("disabled",false);
+      $('#clean').prop("disabled",false);
+    }else{
+      //print error
+      console.log('not working, server responded:'+r);
+      $('#title-cont').append($.parseHTML(alertTunnelError));
+    }
+  }).catch((e)=>{
+    console.log(e);
+    $('#title-cont').append($.parseHTML(alertTunnelError));
+  });
+
 }
