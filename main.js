@@ -276,7 +276,7 @@ function checkTunnel(){
 
 function updateHistory(data, activity){
   let tableRow = `<tr>
-  <td>${activity}</td>
+  <td>${activity.toString().substring(0,3)}</td>
   <td>${data.lin_acc_x.toFixed(3)}</td>
   <td>${data.lin_acc_y.toFixed(3)}</td>
   <td>${data.lin_acc_z.toFixed(3)}</td>
