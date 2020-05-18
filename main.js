@@ -176,8 +176,10 @@ async function getUniqueId(){
 function classify(data){
   if(data.lin_acc_mod >= 0.6){
     $('#activity').text("moving");  
+    return "moving";
   }else{
     $('#activity').text("laying");  
+    return "laying";
   }
 }
 
