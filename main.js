@@ -124,21 +124,23 @@ $(document).ready(async function() {
       $('#y-f').text(lin_acc_y);
       $('#z-f').text(lin_acc_z);
 
+      //create a message
+      msgText= {
+        clientId:clientUniqueId,
+        x:sensor.x,
+        y:sensor.y,
+        z:sensor.z,
+        lin_acc_x:lin_acc_x,
+        lin_acc_y:lin_acc_y,
+        lin_acc_z:lin_acc_z,
+        acc_mod:lin_acc_mod
+      }
+
       /* 
         SEND THE DATA 
       */
       if(!EDGE){
-        //create a message
-        msgText= {
-          clientId:clientUniqueId,
-          x:sensor.x,
-          y:sensor.y,
-          z:sensor.z,
-          lin_acc_x:lin_acc_x,
-          lin_acc_y:lin_acc_y,
-          lin_acc_z:lin_acc_z,
-          acc_mod:lin_acc_mod
-        }
+        
         //POST THE MESSAGE TO THE API
         APICall(url = `https://${myIpAddr}/readings`, method=1 ,data=msgText) // 1: POST, 0: GET
         .then((r)=> { console.log(r);}) // r={}
@@ -146,7 +148,7 @@ $(document).ready(async function() {
       
       }else{
         //local classification and publish the activity directly
-        activityEdge = classify(data);
+        activityEdge = classify(msgText);
         APICall(url = `https://${myIpAddr}/state/${clientUniqueId}`, method=1 ,data={activity:activityEdge}) // 1: POST, 0: GET
         .then((r)=> { console.log(r);}) // r={}
         .catch(function(e) {console.log(`error ${e}`);});
