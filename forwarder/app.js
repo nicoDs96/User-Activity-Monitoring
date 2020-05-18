@@ -44,7 +44,7 @@ app.get('/state/:clientId', function (req, res) {
         res.send(JSON.stringify(message));
     }
     else{
-        res.status(404).send();
+        res.status(404).send({});
     }
     
 });

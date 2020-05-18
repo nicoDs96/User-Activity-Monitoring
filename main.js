@@ -6,6 +6,10 @@ var activityTopic = ""; //pattern sensor/{client id}/activity
 var sensorPubTopic = ""; //pattern sensor/{client id}/accelerometer
 var clientUniqueId = "";
 
+var statusintervalId;
+
+var myIpAddr = '192.168.1.63';
+
 //called when sensor.onreading
 class LowPassFilterData {
   constructor(reading, bias) {
@@ -30,8 +34,8 @@ $(document).ready(async function() {
     let filter = new LowPassFilterData(sensor, 0.3);
     
     // allow user to start and stop monitoring, clear the interface
-    $('#stop').click( () =>{sensor.stop();});
-    $('#start').click( () =>{sensor.start()});
+    $('#stop').click( () =>{ sensor.stop(); clearInterval(statusintervalId) });
+    $('#start').click( () =>{ sensor.start(); checkStatus(); }); 
     $('#clean').click( () =>{
       $('#acc-mod').empty();
       $('#x').empty();
@@ -90,7 +94,7 @@ $(document).ready(async function() {
         lin_acc_z:lin_acc_z,
         acc_mod:lin_acc_mod
       }
-      APICall(url = 'http://127.0.0.1:3000/state/client', method=1 ,data=msgText) // 1: POST, 0: GET
+      APICall(url = `http://${myIpAddr}:3000/state/client`, method=1 ,data=msgText) // 1: POST, 0: GET
       .then((r)=> { console.log(r);}) // r={}
       .catch(function(e) {console.log(`error ${e}`);});
       
@@ -153,16 +157,17 @@ async function APICall(url = '', method=0 ,data = {}) {
 
 //check for updates every 1 second
 var checkStatus = () => {
-  setInterval(()=>{
-    APICall(url = `http://127.0.0.1:3000/state/`, method=0 ,data={}) // 1: POST, 0: GET
+
+  statusintervalId = setInterval(()=>{
+    APICall(url = `http://${myIpAddr}:3000/state/${clientUniqueId}`, method=0 ,data={}) // 1: POST, 0: GET
     .then((response)=> { 
 
-      if (!response.ok) {
-        console.log(response)
-      } else {
+      try{ //update the status iff it is available online
         $('#activity').text(response.activity.toString());  
+      }catch(error){
+        console.log(error);
       }
-      
+            
     }) // r={}
     .catch(function(e) {console.log(`error ${e}`);});    
     
