@@ -26,7 +26,7 @@ class LowPassFilterData {
 
 
 $(document).ready(async function() {
-  
+  clientUniqueId = await getUniqueId()
   try {
     // Create Sensor
     let sensor = new Accelerometer({frequency:1});
@@ -94,7 +94,7 @@ $(document).ready(async function() {
         lin_acc_z:lin_acc_z,
         acc_mod:lin_acc_mod
       }
-      APICall(url = `https://${myIpAddr}/state/client`, method=1 ,data=msgText) // 1: POST, 0: GET
+      APICall(url = `https://${myIpAddr}/readings`, method=1 ,data=msgText) // 1: POST, 0: GET
       .then((r)=> { console.log(r);}) // r={}
       .catch(function(e) {console.log(`error ${e}`);});
       
