@@ -46,10 +46,12 @@ $(document).ready(async function() {
     if($('#edge-flag').is(":checked") ){
       console.log("setting Edge to true");
       EDGE=true;
+      clearInterval(statusintervalId);
     }
     else{
       console.log("setting Edge to false");
       EDGE=false;
+      checkStatus();
     } 
   });
 
